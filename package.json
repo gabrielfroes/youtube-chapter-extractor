@@ -1,9 +1,18 @@
 {
+  "scripts": {
+    "start:frontend": "parcel index.html js/index.js",
+    "start:backend": "nodemon backend/server.js",
+    "start": "concurrently yarn:start:*"
+  },
   "devDependencies": {
-    "axios": "^0.19.2",
     "concurrently": "^5.2.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "nodemon": "^2.0.4",
-    "parcel": "^1.12.4"
+    "parcel": "^1.12.4",
+    "puppeteer": "^3.1.0"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0"
   }
 }
