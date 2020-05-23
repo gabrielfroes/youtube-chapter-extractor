@@ -1,12 +1,14 @@
-const YoutubeChapters = {
+require('babel-polyfill'); // to use async await with babel :D
+
+window['YoutubeChapters'] = {
     videoId: '',
     chapters: [],
 
     async load(videoId) {
         this.videoId = videoId
-        const description = await YoutubeChapters.getDescriptionFromVideo(videoId)
+        const description = await this.getDescriptionFromVideo(videoId)
 
-        this.chapters = YoutubeChapters.parseChapters(description)
+        this.chapters = this.parseChapters(description)
         return this.chapters.length > 0
     },
 
@@ -14,12 +16,12 @@ const YoutubeChapters = {
         let description
         let content
 
-        const url = /[localhost|127.0.01]/ig.test(window.location.href) ? `http://127.0.0.1:5500/samples/live.txt?v=${videoId}` : `https://www.youtube.com/?v=${videoId}`
-
         try {
-            const response = await fetch(url)
-            if (!response.ok) return
-            content = await response.text()
+            const response = await fetch(`http://localhost:8000/get-vid?id=${videoId}`)
+            if (response.error) return
+
+            content = await response.json()
+            content = content.data
         } catch (err) {
             return
         }
@@ -79,7 +81,7 @@ const YoutubeChapters = {
                     text: text,
                     time: match[0],
                     timeInSeconds: timeInSeconds,
-                    link: YoutubeChapters.videoChapterLink(timeInSeconds),
+                    link: this.videoChapterLink(timeInSeconds),
                 }
                 newChapters.push(chapter)
             }
