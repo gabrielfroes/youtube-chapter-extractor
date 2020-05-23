@@ -1,39 +1,44 @@
-const YoutubeChapters = {
+require('babel-polyfill'); // to use async await with babel :D
+
+window['YoutubeChapters'] = {
     videoId: '',
     chapters: [],
 
     async load(videoId) {
-        YoutubeChapters.videoId = videoId
-        let description = await YoutubeChapters.getDescriptionFromVideo(videoId)
-        YoutubeChapters.chapters = YoutubeChapters.parseChapters(description)
+        this.videoId = videoId
+        const description = await this.getDescriptionFromVideo(videoId)
 
-        return (YoutubeChapters.chapters.length > 0)
+        this.chapters = this.parseChapters(description)
+        return this.chapters.length > 0
     },
 
     async getDescriptionFromVideo(videoId) {
         let description
         let content
 
-        const url = `http://127.0.0.1:5500/samples/live.txt?v=${videoId}`
         try {
-            let response = await fetch(url)
-            if (!response.ok) return
-            content = await response.text()
+            const response = await fetch(`http://localhost:8000/get-vid?id=${videoId}`)
+            if (response.error) return
+
+            content = await response.json()
+            content = content.data
         } catch (err) {
             return
         }
-        const startSearch = "\\\"description\\\":{\\\"simpleText\\\":\\\""
-        const endSearch = "\\\"}"
+        const startSearch = '\"description\":{\"simpleText\":\"'
+        const endSearch = '\"}'
 
         let currentPosition = content.indexOf(startSearch)
 
         if (currentPosition < 0) return
-        description = content.substr(currentPosition + (startSearch.length))
+        description = content.substr(currentPosition + startSearch.length)
         currentPosition = description.indexOf(endSearch)
 
         if (currentPosition < 0) return
-        description = description.substr(0,
-            description.length - (description.length - currentPosition))
+        description = description.substr(
+            0,
+            description.length - (description.length - currentPosition)
+        )
 
         description = description.replace(/\\\\n/g, '\n')
 
@@ -43,19 +48,16 @@ const YoutubeChapters = {
     parseChapters(content) {
         if (!content) return []
 
-        const startString = "0:00"
-        let currentPosition = 0
-
-        currentPosition = content.indexOf(startString)
+        const startString = '0:00'
+        const currentPosition = content.indexOf(startString)
         if (currentPosition < 0) return []
 
-        let chapters = content.substr(currentPosition).split("\n")
-        return YoutubeChapters.sanitizeChapters(chapters)
-
+        const chapters = content.substr(currentPosition).split('\\n')
+        return this.sanitizeChapters(chapters)
     },
 
     sanitizeChapters(chapters) {
-        let newChapters = []
+        const newChapters = []
 
         for (item of chapters) {
             const timeRegExp = /(?:(?:([01]?\d|2[0-3]):)?([0-5]?\d):)([0-5]\d)/
@@ -64,39 +66,37 @@ const YoutubeChapters = {
 
             if (!match) break
 
-            const timeInSeconds = YoutubeChapters.hmsToSeconds(match[0])
+            const timeInSeconds = this.hmsToSeconds(match[0])
 
-            let text = item.replace(timeRegExp, "");
-            text = (textRegExp.exec(text).index > -1) ?
-                text.substr(textRegExp.exec(text).index) :
-                null
+            let text = item.replace(timeRegExp, '')
+            text =
+                textRegExp.exec(text).index > -1
+                    ? text.substr(textRegExp.exec(text).index)
+                    : null
 
             if (timeInSeconds == 0 && !text) return []
 
             if (text) {
-
-                let chapter = {
-                    'text': text,
-                    'time': match[0],
-                    'timeInSeconds': timeInSeconds,
-                    'link': YoutubeChapters.videoChapterLink(timeInSeconds)
+                const chapter = {
+                    text: text,
+                    time: match[0],
+                    timeInSeconds: timeInSeconds,
+                    link: this.videoChapterLink(timeInSeconds),
                 }
                 newChapters.push(chapter)
-
             }
-
         }
         return newChapters
-
     },
 
     videoChapterLink(seconds) {
-        return `https://www.youtube.com/watch?v=${YoutubeChapters.videoId}&t=${seconds}`
+        return `https://www.youtube.com/watch?v=${this.videoId}&t=${seconds}`
     },
 
     hmsToSeconds(hms) {
-        let sec = 0,
-            min = 1
+        let sec = 0;
+        let min = 1;
+
         hms = hms.split(':')
 
         while (hms.length > 0) {
@@ -105,6 +105,5 @@ const YoutubeChapters = {
         }
 
         return sec
-    }
-
+    },
 }
