@@ -5,7 +5,7 @@ import {
   addChapter,
   updateChapter,
   deleteChapter,
-} from "../controllers/youtube-chatpers-controller.ts";
+} from "../controllers/youtube-chapters-controller.ts";
 
 const router = new Router();
 
