@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Chapter Navigator</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body class="dark">
+
+    <header class="navbar navbar-expand flex-column flex-md-row">
+        <a href="#" class="nav-link navbar-brand">
+            <img src="assets/images/logo-mini.png" alt="Youtube Chapter Navigator">
+        </a>
+        <form class="video_link_form">
+            <input type="text" class="form-control form-control-lg mr-sm-2" id="video_link"
+                placeholder="Enter a Youtube Video URL" aria-label="Enter a Youtube Video URL">
+            <button class="btn btn-primary my-2 my-sm-2" type="submit">Go</button>
+        </form>
+    </header>
+
+    <div class="container-fluid mt-4">
+        <div class="row flex-xl-nowrap">
+
+            <!-- CHAPTER NAVIGATION -->
+            <div class="col d-flex flex-column">
+                <nav class="mb-auto" id="chapters-nav">
+                    <div class="list-group"></div>
+                </nav>
+
+                <footer class="footer mt-5">
+                    <div class="container">
+                        <p class="text-muted">
+                            Created with
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-heart-fill"
+                                fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
+                            </svg>
+                            by <a href="http://codigofonte.tv" target="_blank">Codigo Fonte TV</a>.
+                            <br>
+                            Source code available on <a href="https://github.com/gabrielfroes/youtube-chapter-extractor"
+                                target="_blank">GitHub</a>.
+                        </p>
+
+                        <label>
+                            <input type="checkbox" name="mode" id="mode">
+                            <span class="check"></span>
+                        </label>
+                </footer>
+            </div>
+            <!-- ./CHAPTER NAVIGATION -->
+
+            <!-- MAIN CONTENT -->
+            <div class="col-10">
+                <main role="main">
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <div id="video-embed"></div>
+                    </div>
+                </main>
+            </div>
+            <!-- ./MAIN CONTENT -->
+
+        </div>
+    </div>
+
+    <script src="assets/js/youtube-chapters.js"></script>
+    <script src="assets/js/youtube-player.js"></script>
+    <script>
+        const loading =
+            '<div class="spinner-grow text-danger" role="status"><span class="sr-only">Loading...</span></div>'
+
+        document.querySelector('#mode').addEventListener("click", (e) => {
+            document.querySelector('body').classList.toggle('dark')
+        })
+
+        document.querySelector('.video_link_form').addEventListener("submit", (e) => {
+            e.preventDefault()
+            extract(document.querySelector('#video_link').value)
+        })
+
+        const extract = async url => {
+            let resultsElement = document.querySelector('#chapters-nav')
+            resultsElement.innerHTML = loading
+
+            const videoId = YoutubeChapters.videoIdFromURL(url)
+
+            if (videoId == "") {
+                setMessage('Invalid video URL!')
+                return
+            }
+
+            let loadYoutubeData = await YoutubeChapters.load(videoId)
+            if (!loadYoutubeData) {
+                setMessage('There is no topics on this video')
+                return
+            }
+
+            YoutubePlayer.load('video-embed', videoId)
+            fillChapters(YoutubeChapters.chapters)
+
+        }
+
+        const setMessage = text => {
+            let resultsElement = document.querySelector('#chapters-nav')
+            resultsElement.innerHTML = `<p class="text-danger">${text}</p>`
+        }
+
+        const fillChapters = chapters => {
+
+            const listHeader = `<div class="list-group">`
+            const listFooter = `</div>`
+
+            let listItem = ''
+            chapters.forEach((item) => {
+                listItem += `<a href="#" class="list-group-item list-group-item-action" onclick="playChapter(this, ${item.timeInSeconds})">
+                    ${item.text}
+                    <small>${item.time}</small>
+                </a>`
+            })
+
+            let containerList = `<div class="col-12">${listHeader}${listItem}</div>`
+            let resultsElement = document.querySelector('#chapters-nav')
+            resultsElement.innerHTML = containerList
+
+        }
+
+        const playChapter = (element, seconds) => {
+            const chaptersList = document.querySelectorAll("#chapters-nav .list-group .list-group-item-action")
+            chaptersList.forEach((el) => {
+                el.classList.remove("active")
+            })
+
+            element.classList.add('active')
+            YoutubePlayer.playVideo(seconds)
+        }
+    </script>
+</body>
+
+</html>
