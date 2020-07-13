@@ -5,6 +5,17 @@
     --textColor: #fff;
 }
 
+form {
+    display: contents;
+}
+
+
+
+.list-group-item-action small {
+    display: block;
+    color: var(--gray);
+}
+
 /* DARK MODE */
 body.dark {
     background-color: var(--darkColor);
@@ -26,6 +37,14 @@ body.dark .form-control {
 body.dark .list-group-item-action {
     background-color: var(--darkColor3);
     color: var(--textColor);
+}
+
+body.dark .active {
+    background-color: var(--blue);
+}
+
+body.dark .active small {
+    color: var(--yellow);
 }
 
 /* ./DARK MODE */
