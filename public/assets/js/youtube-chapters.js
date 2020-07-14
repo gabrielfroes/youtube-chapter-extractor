@@ -10,7 +10,8 @@ const YoutubeChapters = {
   },
 
   async getChapters(videoId) {
-    const url = `http://localhost:8080/api/v1/video-chapters/${videoId}`;
+    const hostname = window.location.hostname;
+    const url = `http://${hostname}:8080/api/v1/video-chapters/${videoId}`;
 
     try {
       const response = await fetch(url);
